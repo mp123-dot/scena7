@@ -33,22 +33,33 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(900, 600);
+  createCanvas(windowWidth, windowHeight);
   textAlign(CENTER, CENTER);
   textSize(28);
   noStroke();
+  setupButtons();
+  setupGlitter();
+  setupKissGif();
+  setupDalejImg();
+  noCursor();
+}
 
-  let btnWidth = 200;
-  let btnHeight = 200;
-  let spacing = 30;
-  let startX = (width - (btnWidth * 4 + spacing * 3)) / 2;
-  let y = 200;
-
+function setupButtons() {
+  buttons = [];
+  let btnWidth = min(200, width / 5);
+  let btnHeight = btnWidth;
+  let spacing = min(30, width / 30);
+  let totalWidth = btnWidth * 4 + spacing * 3;
+  let startX = (width - totalWidth) / 2;
+  let y = height * 0.33;
   for (let i = 0; i < 4; i++) {
     let x = startX + i * (btnWidth + spacing);
     buttons.push({ x, y, w: btnWidth, h: btnHeight, label: imageFiles[i], color: color(255) });
   }
+}
 
+function setupGlitter() {
+  glitter = [];
   for (let i = 0; i < 200; i++) {
     glitter.push({
       x: random(width),
@@ -67,13 +78,17 @@ function setup() {
       )
     });
   }
+}
 
+function setupKissGif() {
+  if (kissGif) kissGif.remove();
   kissGif = createImg("kiss-dinner.gif");
-  kissGif.position(width / 2 - 125, height / 2 - 125);
-  kissGif.size(250, 250);
+  kissGif.position(width / 2 - width * 0.14, height / 2 - width * 0.14);
+  kissGif.size(width * 0.28, width * 0.28);
   kissGif.hide();
+}
 
-  // Przygotuj okrągły przycisk DALEJ
+function setupDalejImg() {
   const s = min(rawDalejImg.width, rawDalejImg.height);
   dalejImg = createImage(s, s);
   rawDalejImg.loadPixels();
@@ -89,13 +104,11 @@ function setup() {
   maskG.circle(s/2, s/2, s);
   dalejImg.mask(maskG);
 
-  // Pozycja i rozmiar przycisku DALEJ (80 px od dołu)
-  przyciskSzer = 90;
-  przyciskWys = 90;
+  // Przycisk DALEJ - rozmiar i pozycja zależne od okna
+  przyciskSzer = min(90, width / 10);
+  przyciskWys = przyciskSzer;
   przyciskX = width / 2;
-  przyciskY = height - 80;
-
-  noCursor();
+  przyciskY = height - przyciskWys / 2 - 80;
 }
 
 function draw() {
@@ -104,7 +117,6 @@ function draw() {
     return;
   }
 
-  // Tło na początku
   image(tloUbrania, 0, 0, width, height);
 
   for (let i = 0; i < buttons.length; i++) {
@@ -133,13 +145,11 @@ function draw() {
 
 function mousePressed() {
   if (nextScreen) {
-    // Sprawdź, czy kliknięto okrągły przycisk DALEJ
-    let d = dist(mouseX, mouseY, przyciskX, przyciskY);
+    let d = dist(mouseX, przyciskY, przyciskX, przyciskY);
     if (d < przyciskSzer / 2) {
       if (glimmerSound && glimmerSound.isLoaded()) {
         glimmerSound.play();
       }
-      // Dodaj glitter przy kliknięciu w przycisk DALEJ
       for (let i = 0; i < 18; i++) {
         glitter.push({
           x: mouseX,
@@ -156,7 +166,7 @@ function mousePressed() {
           )
         });
       }
-      // Przeniesienie do wskazanej strony:
+      // Przeniesienie do scena8
       window.location.href = "https://mp123-dot.github.io/scena8/";
       return;
     }
@@ -172,20 +182,20 @@ function mousePressed() {
       mouseY < btn.y + btn.h
     ) {
       if (btn.label === correctLabel) {
-        btn.color = color(0, 200, 0); // zielony
+        btn.color = color(0, 200, 0);
         successSound.play();
 
         setTimeout(() => {
           nextScreen = true;
           kissGif.show();
-        }, 1000); // po 1 sekundzie
+        }, 1000);
       } else {
-        btn.color = color(255, 0, 0); // czerwony
+        btn.color = color(255, 0, 0);
         let randomSound = random(failSounds);
         randomSound.play();
 
         setTimeout(() => {
-          btn.color = color(255); // reset do białego
+          btn.color = color(255);
         }, 1000);
       }
     }
@@ -244,21 +254,26 @@ function drawNextScreen() {
     if (g.life > g.maxLife) glitter.splice(i, 1);
   }
 
-  // Tekst futura.ttf
   fill(255);
   stroke(255, 105, 180);
   strokeWeight(2);
-  textSize(36);
+  textSize(min(36, width / 25));
   textFont(futuraFont);
-  text("Świetny wybór! Miłej randki!", width / 2, 80);
+  text("Świetny wybór! Miłej randki!", width / 2, height * 0.13);
 
-  // Rysuj okrągły przycisk DALEJ na środku na dole
   imageMode(CENTER);
   image(dalejImg, przyciskX, przyciskY, przyciskSzer, przyciskWys);
   imageMode(CORNER);
 
-  // Kursor flowerMouse na ekranie końcowym
   if (flowerMouse) {
     image(flowerMouse, mouseX - 16, mouseY - 16, 32, 32);
   }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  setupButtons();
+  setupGlitter();
+  setupKissGif();
+  setupDalejImg();
 }
